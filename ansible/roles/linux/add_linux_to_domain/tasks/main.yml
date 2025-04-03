@@ -9,6 +9,7 @@
       - realmd
       - adcli
       - packagekit
+      - ntpdate
     state: present
 
 - name: Create KRB5 File
@@ -55,17 +56,64 @@
     state: present
     backup: yes
 
+- name: Modify resolv.conf to use domain controller as DNS
+  copy:
+    dest: "/etc/resolv.conf"
+    content: |
+      search {{ domain }}
+      nameserver {{ dc_ip }}
+    backup: yes
+
+- name: Ensure time is synchronized with domain controller
+  shell:
+    "ntpdate -u {{ dc_ip }}"
+
+- name: Test DNS resolution of domain controller
+  shell:
+    "host {{ dc_fqdn }}"
+  register: dns_test
+  ignore_errors: true
+
+- name: Print DNS test results
+  debug:
+    var: dns_test.stdout_lines
+
 - name: Modify Hostname
   shell:
     "sudo hostnamectl set-hostname {{ hostname }}.{{ domain }}"
 
+- name: Clear any previous Kerberos tickets
+  shell:
+    "kdestroy -A"
+  ignore_errors: true
+
+- name: Verify Kerberos configuration
+  shell:
+    "cat /etc/krb5.conf"
+  register: krb5_conf
+
+- name: Print Kerberos configuration
+  debug:
+    var: krb5_conf.stdout_lines
+
 - name: Kinit
   shell:
     "echo {{ domain_password }} | sudo kinit {{ domain_username }}"
-  register: result
+  register: kinit_result
 
 - name: Print Kinit Result
-  debug: var=result.stdout_lines
+  debug:
+    var: kinit_result.stdout_lines
+
+- name: Verify Kerberos ticket
+  shell:
+    "klist"
+  register: klist_result
+  ignore_errors: true
+
+- name: Print Kerberos tickets
+  debug:
+    var: klist_result.stdout_lines
 
 - name: Check if domain joined
   shell:
@@ -73,17 +121,43 @@
   register: domain_joined
 
 - name: Print realm list Result
-  debug: var=domain_joined.stdout_lines
+  debug:
+    var: domain_joined.stdout_lines
 
-- name: Join Realm
+- name: Join Realm with Discovery
   shell:
-    "echo {{ domain_password }} | sudo realm join -v -U {{ domain_username }} {{ domain }}"
+    "echo {{ domain_password }} | sudo realm join --verbose {{ domain }} -U {{ domain_username }}"
   when: not domain in domain_joined.stdout_lines
-  register: result
+  register: realm_result
+  ignore_errors: true
 
 - name: Print Realm Result
-  debug: var=result.stdout_lines
+  debug:
+    var: realm_result.stdout_lines
   when: not domain in domain_joined.stdout_lines
+
+- name: Try joining with adcli if realm failed
+  shell:
+    "echo {{ domain_password }} | sudo adcli join --verbose --domain {{ domain }} --domain-realm {{ domain|upper }} --domain-controller {{ dc_fqdn }} --login-type user --login-user {{ domain_username }} --stdin-password"
+  when: not domain in domain_joined.stdout_lines and (result is failed or result.rc != 0)
+  register: adcli_result
+  ignore_errors: true
+
+- name: Print adcli Result
+  debug:
+    var: adcli_result.stdout_lines
+  when: not domain in domain_joined.stdout_lines and (result is failed or result.rc != 0)
+
+- name: Check if domain joined after adcli
+  shell:
+    "realm list"
+  register: domain_joined_after_adcli
+  when: not domain in domain_joined.stdout_lines and (result is failed or result.rc != 0)
+
+- name: Print realm list after adcli
+  debug:
+    var: domain_joined_after_adcli.stdout_lines
+  when: not domain in domain_joined.stdout_lines and (result is failed or result.rc != 0)
 
 - name: Activate Homedir Creation
   shell:

@@ -14,7 +14,8 @@
     - role: 'linux/add_linux_to_domain'
   vars:
     domain: "{{lab.hosts[dict_key].domain}}"
-    domain_username: "{{domain}}\\{{admin_user}}"
+    # Format the domain admin user in the form admin@DOMAIN.COM for Kerberos
+    domain_username: "{{admin_user}}@{{domain | upper()}}"
     domain_password: "{{lab.domains[domain].domain_password}}"
     hostname: "{{lab.hosts[dict_key].hostname}}"
     dc_fqdn: "{{lab.domains[domain].dc}}.{{domain}}"
