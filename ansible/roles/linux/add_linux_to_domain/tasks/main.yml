@@ -139,25 +139,25 @@
 - name: Try joining with adcli if realm failed
   shell:
     "echo {{ domain_password }} | sudo adcli join --verbose --domain {{ domain }} --domain-realm {{ domain|upper }} --domain-controller {{ dc_fqdn }} --login-type user --login-user {{ domain_username }} --stdin-password"
-  when: not domain in domain_joined.stdout_lines and (result is failed or result.rc != 0)
+  when: not domain in domain_joined.stdout_lines and (realm_result is failed or realm_result.rc != 0)
   register: adcli_result
   ignore_errors: true
 
 - name: Print adcli Result
   debug:
     var: adcli_result.stdout_lines
-  when: not domain in domain_joined.stdout_lines and (result is failed or result.rc != 0)
+  when: not domain in domain_joined.stdout_lines and (realm_result is failed or realm_result.rc != 0)
 
 - name: Check if domain joined after adcli
   shell:
     "realm list"
   register: domain_joined_after_adcli
-  when: not domain in domain_joined.stdout_lines and (result is failed or result.rc != 0)
+  when: not domain in domain_joined.stdout_lines and (realm_result is failed or realm_result.rc != 0)
 
 - name: Print realm list after adcli
   debug:
     var: domain_joined_after_adcli.stdout_lines
-  when: not domain in domain_joined.stdout_lines and (result is failed or result.rc != 0)
+  when: not domain in domain_joined.stdout_lines and (realm_result is failed or realm_result.rc != 0)
 
 - name: Activate Homedir Creation
   shell:
