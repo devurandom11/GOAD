@@ -52,6 +52,7 @@ ludus:
     template: win2019-server-x64-template
     vlan: 10
     ip_last_octet: 22
+    ram_gb: 8
     cpus: 8
     windows:
       install_additional_tools: true
@@ -88,7 +89,7 @@ ludus:
     linux: true
     roles:
       - ludus_caldera_server
-    roles_vars:
+    role_vars:
       ludus_caldera_plugins:
         - access
         - atomic
