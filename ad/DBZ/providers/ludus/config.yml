@@ -7,7 +7,10 @@ ludus:
     ram_gb: 8
     cpus: 8
     windows:
+      install_additional_tools: true
       sysprep: true
+    roles:
+      - ludus_caldera_agent
   - vm_name: "{{ range_id }}-DBZ-DC02"
     hostname: "{{ range_id }}-DC02"
     template: win2019-server-x64-template
@@ -16,7 +19,10 @@ ludus:
     ram_gb: 8
     cpus: 8
     windows:
+      install_additional_tools: true
       sysprep: true
+    roles:
+      - ludus_caldera_agent
   - vm_name: "{{ range_id }}-DBZ-DC03"
     hostname: "{{ range_id }}-DC03"
     template: win2016-server-x64-template
@@ -25,16 +31,33 @@ ludus:
     ram_gb: 8
     cpus: 8
     windows:
+      install_additional_tools: true
       sysprep: true
+    roles:
+      - ludus_caldera_agent
+  - vm_name: "{{ range_id }}-DBZ-SRV01"
+    hostname: "{{ range_id }}-SRV01"
+    template: win2019-server-x64-template
+    vlan: 10
+    ip_last_octet: 21
+    ram_gb: 8
+    cpus: 8
+    windows:
+      install_additional_tools: true
+      sysprep: true
+    roles:
+      - ludus_caldera_agent
   - vm_name: "{{ range_id }}-DBZ-SRV02"
     hostname: "{{ range_id }}-SRV02"
     template: win2019-server-x64-template
     vlan: 10
     ip_last_octet: 22
-    ram_gb: 8
     cpus: 8
     windows:
+      install_additional_tools: true
       sysprep: true
+    roles:
+      - ludus_caldera_agent
   - vm_name: "{{ range_id }}-DBZ-SRV03"
     hostname: "{{ range_id }}-SRV03"
     template: win2019-server-x64-template
@@ -43,7 +66,10 @@ ludus:
     ram_gb: 8
     cpus: 8
     windows:
+      install_additional_tools: true
       sysprep: true
+    roles:
+      - ludus_caldera_agent
   - vm_name: "{{ range_id }}-DBZ-SRV04"
     hostname: "{{ range_id }}-SRV04"
     template: ubuntu-22.04-x64-server-template
@@ -52,21 +78,90 @@ ludus:
     ram_gb: 8
     cpus: 8
     linux: true
-  - vm_name: "{{ range_id }}-DBZ-KALI"
-    hostname: "{{ range_id }}-KALI"
+  - vm_name: "{{ range_id }}-DBZ-CALDERA"
+    hostname: "{{ range_id }}-Caldera"
+    template: ubuntu-22.04-x64-server-template
+    vlan: 10
+    ip_last_octet: 2
+    ram_gb: 8
+    cpus: 8
+    linux: true
+    roles:
+      - ludus_caldera_server
+    roles_vars:
+      ludus_caldera_plugins:
+        - access
+        - atomic
+        - human
+        - sandcat
+        - mock
+        - stockpile
+        - response
+        - compass
+        - caltack
+        - ssl
+        - gameboard
+        - training
+        - builder
+        - debrief
+  - vm_name: "{{ range_id }}-DBZ-Kali"
+    hostname: "{{ range_id }}-Kali"
     template: kali-x64-desktop-template
     vlan: 10
     ip_last_octet: 99
     ram_gb: 8
     cpus: 8
     linux:
-      - packages:
-          - kali-linux-default
-          - kali-linux-headless
-          - dstat
-          - ncdu
-          - ranger
-          - net-tools
-          - htop
-          - btop
-          - tldr
+      packages:
+        - btop
+        - htop
+        - dstat
+        - ncdu
+        - ranger
+        - tldr
+        - gdu
+        - tldr
+        - kali-linux-default
+    testing:
+      snapshot: false
+      block_internet: false
+  - vm_name: "{{ range_id }}-DBZ-CommandoVM"
+    hostname: "{{ range_id }}-CommandoVM"
+    template: commando-vm-template
+    vlan: 10
+    ip_last_octet: 98
+    ram_gb: 8
+    cpus: 8
+    windows:
+      sysprep: false
+    testing:
+      snapshot: false
+      block_internet: false
+  - vm_name: "{{ range_id }}-DBZ-WAZUH"
+    hostname: "{{ range_id }}-WAZUH"
+    template: ubuntu-22.04-x64-server-template
+    vlan: 10
+    ip_last_octet: 51
+    ram_gb: 16
+    cpus: 8
+    linux: true
+  - vm_name: "{{ range_id }}-DBZ-elk"
+    hostname: "{{ range_id }}-elk"
+    template: ubuntu-22.04-x64-server-template
+    vlan: 10
+    ip_last_octet: 50
+    ram_gb: 16
+    cpus: 8
+    linux: true
+  - vm_name: "{{ range_id }}-DBZ-WS01"
+    hostname: "{{ range_id }}-WS01"
+    template: win10-22h2-x64-enterprise-template
+    vlan: 10
+    ip_last_octet: 31
+    ram_gb: 8
+    cpus: 8
+    windows:
+      sysprep: true
+      install_additional_tools: true
+    roles:
+      - ludus_caldera_agent
