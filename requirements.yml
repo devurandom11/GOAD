@@ -7,6 +7,7 @@ ansible_runner
 # ansible-core 2.12.6 min version python 3.8
 ansible-core==2.12.6
 pywinrm
+passlib
 # AZURE
 azure-identity
 azure-mgmt-compute
