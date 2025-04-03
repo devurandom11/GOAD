@@ -96,9 +96,21 @@
   debug:
     var: krb5_conf.stdout_lines
 
+- name: Backup hosts file before modifying
+  copy:
+    src: /etc/hosts
+    dest: /etc/hosts.bak
+    remote_src: yes
+
+- name: Ensure domain controller is in hosts file
+  lineinfile:
+    path: /etc/hosts
+    line: "{{dc_ip}} {{dc_fqdn}} {{dc_fqdn.split('.')[0]}}"
+    state: present
+
 - name: Kinit
   shell:
-    "echo {{ domain_password }} | sudo kinit {{ domain_username }}"
+    "echo {{ domain_password }} | kinit {{ domain_username }}"
   register: kinit_result
 
 - name: Print Kinit Result
@@ -127,19 +139,19 @@
 - name: Join Realm with Discovery
   shell:
     "echo {{ domain_password }} | sudo realm join --verbose {{ domain }} -U {{ domain_username }}"
-  when: not domain in domain_joined.stdout_lines
+  when: not domain in domain_joined.stdout_lines and not domain_already_joined|default(false)
   register: realm_result
   ignore_errors: true
 
 - name: Print Realm Result
   debug:
     var: realm_result.stdout_lines
-  when: not domain in domain_joined.stdout_lines
+  when: not domain in domain_joined.stdout_lines and not domain_already_joined|default(false)
 
 - name: Try joining with adcli if realm failed
   shell:
     "echo {{ domain_password }} | sudo adcli join --verbose --domain {{ domain }} --domain-realm {{ domain|upper }} --domain-controller {{ dc_fqdn }} --login-type user --login-user {{ domain_username }} --stdin-password"
-  when: not domain in domain_joined.stdout_lines and (realm_result is failed or realm_result.rc != 0)
+  when: not domain in domain_joined.stdout_lines and (realm_result is failed or realm_result.rc != 0) and not domain_already_joined|default(false)
   register: adcli_result
   ignore_errors: true
 
@@ -159,6 +171,138 @@
     var: domain_joined_after_adcli.stdout_lines
   when: not domain in domain_joined.stdout_lines and (realm_result is failed or realm_result.rc != 0)
 
+- name: Check if SSSD config exists
+  stat:
+    path: /etc/sssd/sssd.conf
+  register: sssd_conf_stat
+
+- name: Create SSSD directory if it doesn't exist
+  file:
+    path: /etc/sssd
+    state: directory
+    mode: '0755'
+  when: not sssd_conf_stat.stat.exists
+
+- name: Create SSSD config if it doesn't exist
+  copy:
+    dest: "/etc/sssd/sssd.conf"
+    content: |
+      [sssd]
+      services = nss, pam
+      config_file_version = 2
+      domains = {{ domain }}
+      
+      [domain/{{ domain }}]
+      id_provider = ad
+      access_provider = ad
+      ad_domain = {{ domain }}
+      krb5_realm = {{ domain | upper }}
+      ad_server = {{ dc_fqdn }}
+      fallback_homedir = /home/%u
+      default_shell = /bin/bash
+      use_fully_qualified_names = False
+    mode: '0600'
+  when: not sssd_conf_stat.stat.exists
+
+- name: Check if keytab file exists
+  stat:
+    path: /etc/krb5.keytab
+  register: keytab_stat
+
+- name: Create keytab directory
+  file:
+    path: /etc/
+    state: directory
+    mode: '0755'
+  when: not keytab_stat.stat.exists
+
+- name: Get hostname in uppercase
+  shell: hostname | tr '[:lower:]' '[:upper:]'
+  register: hostname_upper
+
+- name: Create keytab file if it doesn't exist
+  shell: |
+    echo {{ domain_password }} | kinit {{ domain_username }}
+    printf "addent -password -p host/$(hostname -f)@{{ domain | upper }} -k 1 -e aes256-cts\n{{ domain_password }}\nwkt /etc/krb5.keytab\nquit\n" | sudo ktutil
+  when: not keytab_stat.stat.exists
+  ignore_errors: true
+
+- name: Set appropriate permissions for keytab
+  file:
+    path: /etc/krb5.keytab
+    mode: '0600'
+    owner: root
+    group: root
+  when: not keytab_stat.stat.exists
+  ignore_errors: true
+
+- name: Restart SSSD service
+  systemd:
+    name: sssd
+    state: restarted
+  ignore_errors: true
+
+- name: Check SSSD service status
+  shell: systemctl status sssd
+  register: sssd_status
+  ignore_errors: true
+
+- name: Show SSSD service logs
+  shell: journalctl -u sssd --no-pager | tail -n 20
+  register: sssd_logs
+  ignore_errors: true
+
+- name: Print SSSD status
+  debug:
+    var: sssd_status.stdout_lines
+  ignore_errors: true
+  
+- name: Print SSSD logs
+  debug:
+    var: sssd_logs.stdout_lines
+  ignore_errors: true
+
+- name: Try joining again with a different approach
+  shell: |
+    echo {{ domain_password }} | sudo adcli join \
+      --domain-controller={{ dc_fqdn }} \
+      --domain-ou="CN=Computers,{{ lab.domains[domain].path }}" \
+      --login-user={{ domain_username }} \
+      --computer-name={{ hostname }} \
+      --stdin-password \
+      --verbose \
+      {{ domain }}
+  ignore_errors: true
+  register: adcli_alt_result
+  when: not domain in domain_joined.stdout_lines
+
+- name: Print alternative adcli result
+  debug:
+    var: adcli_alt_result.stdout_lines
+  when: adcli_alt_result is defined
+
+- name: Last resort - try to manually register computer account with samba-tool
+  block:
+    - name: Install samba-tool
+      apt:
+        name: samba-common-bin
+        state: present
+      
+    - name: Create computer account in AD
+      shell: |
+        echo {{ domain_password }} | samba-tool computer create {{ hostname | upper }} \
+        -U {{ domain_username }} \
+        --server={{ dc_fqdn }} \
+        --description="Joined via samba-tool" 
+      ignore_errors: true
+      register: samba_result
+      
+    - name: Print samba tool result
+      debug:
+        var: samba_result.stdout_lines
+  when: not domain in domain_joined.stdout_lines
+  ignore_errors: true
+
 - name: Activate Homedir Creation
   shell:
     "sudo pam-auth-update --enable mkhomedir"
@@ -168,12 +312,14 @@
     path: /etc/sssd/sssd.conf
     regexp: 'use_fully_qualified_names = True'
     replace: 'use_fully_qualified_names = False'
+  when: sssd_conf_stat.stat.exists or not sssd_conf_stat is defined
 
 - name: Modify SSDCONF Line 2 Ubuntu
   replace:
     path: /etc/sssd/sssd.conf
     regexp: 'fallback_homedir = /home/%u@%d'
     replace: 'fallback_homedir = /home/%u'
+  when: sssd_conf_stat.stat.exists or not sssd_conf_stat is defined
 
 - name: Add {{ item }} to Sudoers Ubuntu
   lineinfile:
@@ -188,4 +334,5 @@
   shell:
     "realm permit -g {{ item }}@{{ domain }}"
   loop: "{{ssh_group}}"
+  ignore_errors: yes
 

@@ -10,6 +10,28 @@
   hosts: linux_domain
   become: yes
   tags: 'linux_domain_join'
+  pre_tasks:
+    - name: Debug domain variables
+      debug:
+        msg: 
+          - "Domain: {{lab.hosts[dict_key].domain}}"
+          - "Domain user: {{admin_user}}@{{lab.hosts[dict_key].domain | upper()}}"
+          - "DC FQDN: {{lab.hosts[lab.domains[lab.hosts[dict_key].domain].dc].hostname}}.{{lab.hosts[dict_key].domain}}"
+          - "DC IP: {{hostvars[lab.domains[lab.hosts[dict_key].domain].dc].ansible_host}}"
+    
+    - name: Check if already domain joined
+      command: realm list
+      register: domain_join_check
+      changed_when: false
+      ignore_errors: true
+      
+    - name: Set domain join facts
+      set_fact:
+        domain_already_joined: "{{ lab.hosts[dict_key].domain in domain_join_check.stdout }}"
+      
+    - name: Show domain join status
+      debug:
+        msg: "Domain join status: {{ 'Already joined to ' + lab.hosts[dict_key].domain if domain_already_joined else 'Not joined, will attempt to join' }}"
   roles:
     - role: 'linux/add_linux_to_domain'
   vars:
