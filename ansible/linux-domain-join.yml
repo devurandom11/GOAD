@@ -18,7 +18,7 @@
     domain_username: "{{admin_user}}@{{domain | upper()}}"
     domain_password: "{{lab.domains[domain].domain_password}}"
     hostname: "{{lab.hosts[dict_key].hostname}}"
-    dc_fqdn: "{{lab.domains[domain].dc}}.{{domain}}"
+    dc_fqdn: "{{lab.hosts[lab.domains[domain].dc].hostname}}.{{domain}}"
     dc_ip: "{{hostvars[lab.domains[domain].dc].ansible_host}}"
     domain_join_method: "{{lab.hosts[dict_key].domain_join_method | default('sssd')}}"
     # Add groups that should have sudo access
