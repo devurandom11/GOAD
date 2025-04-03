@@ -4,8 +4,8 @@ ludus:
     template: win2019-server-x64-template
     vlan: 10
     ip_last_octet: 10
-    ram_gb: 4
-    cpus: 2
+    ram_gb: 8
+    cpus: 8
     windows:
       sysprep: true
   - vm_name: "{{ range_id }}-DBZ-DC02"
@@ -13,8 +13,8 @@ ludus:
     template: win2019-server-x64-template
     vlan: 10
     ip_last_octet: 11
-    ram_gb: 4
-    cpus: 2
+    ram_gb: 8
+    cpus: 8
     windows:
       sysprep: true
   - vm_name: "{{ range_id }}-DBZ-DC03"
@@ -22,8 +22,8 @@ ludus:
     template: win2016-server-x64-template
     vlan: 10
     ip_last_octet: 12
-    ram_gb: 4
-    cpus: 2
+    ram_gb: 8
+    cpus: 8
     windows:
       sysprep: true
   - vm_name: "{{ range_id }}-DBZ-SRV02"
@@ -31,8 +31,8 @@ ludus:
     template: win2019-server-x64-template
     vlan: 10
     ip_last_octet: 22
-    ram_gb: 4
-    cpus: 2
+    ram_gb: 8
+    cpus: 8
     windows:
       sysprep: true
   - vm_name: "{{ range_id }}-DBZ-SRV03"
@@ -40,8 +40,8 @@ ludus:
     template: win2019-server-x64-template
     vlan: 10
     ip_last_octet: 23
-    ram_gb: 4
-    cpus: 2
+    ram_gb: 8
+    cpus: 8
     windows:
       sysprep: true
   - vm_name: "{{ range_id }}-DBZ-SRV04"
@@ -49,6 +49,24 @@ ludus:
     template: ubuntu-22.04-x64-server-template
     vlan: 10
     ip_last_octet: 24
-    ram_gb: 4
-    cpus: 2
+    ram_gb: 8
+    cpus: 8
     linux: true
+  - vm_name: "{{ range_id }}-DBZ-KALI"
+    hostname: "{{ range_id }}-KALI"
+    template: kali-x64-desktop-template
+    vlan: 10
+    ip_last_octet: 99
+    ram_gb: 8
+    cpus: 8
+    linux:
+      - packages:
+          - kali-linux-default
+          - kali-linux-headless
+          - dstat
+          - ncdu
+          - ranger
+          - net-tools
+          - htop
+          - btop
+          - tldr
