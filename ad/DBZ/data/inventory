@@ -1,13 +1,13 @@
 ; GLOBAL CONFIG
 [all:vars]
 ; domain_name : folder inside ad/
-domain_name=GOAD
+domain_name=DBZ
 
 ; administrator user
 admin_user=administrator
 
 ; global settings inventory default value
-keyboard_layouts=["en-US", "da-DK", "fr-FR"]
+keyboard_layouts=["en-US"]
 
 ; modify this to add a default route
 add_route=no

@@ -6,23 +6,23 @@
 
 ## Servers
 This lab is actually composed of five virtual machines:
-- **kingslanding** : DC01  running on Windows Server 2019 (with windefender enabled by default)
-- **winterfell**   : DC02  running on Windows Server 2019 (with windefender enabled by default)
-- **castelblack**  : SRV02 running on Windows Server 2019 (with windefender **disabled** by default)
-- **meereen**      : DC03  running on Windows Server 2016 (with windefender enabled by default)
-- **braavos**      : SRV03 running on Windows Server 2016 (with windefender enabled by default)
+- **capsulecorp** : DC01  running on Windows Server 2019 (with windefender enabled by default)
+- **namekplanet**   : DC02  running on Windows Server 2019 (with windefender enabled by default)
+- **lookout**  : SRV02 running on Windows Server 2019 (with windefender **disabled** by default)
+- **beerusplanet**      : DC03  running on Windows Server 2016 (with windefender enabled by default)
+- **kameisland**      : SRV03 running on Windows Server 2016 (with windefender enabled by default)
 
-## domain : north.sevenkingdoms.local
-- **winterfell**     : DC01
-- **castelblack**    : SRV02 : MSSQL / IIS
+## domain : namek.earthrealm.local
+- **namekplanet**     : DC01
+- **lookout**    : SRV02 : MSSQL / IIS
 
-## domain : sevenkingdoms.local
-- **kingslanding**   : DC02
-- **castelrock**     : SRV01 (disabled due to resources reasons)
+## domain : earthrealm.local
+- **capsulecorp**   : DC02
+- **gizardwastelands**     : SRV01 (disabled due to resources reasons)
 
-## domain : essos.local
-- **braavos**        : DC03
-- **meeren**         : SRV03 : MSSQL / ADCS
+## domain : universe7.local
+- **kameisland**        : DC03
+- **beerusplanet**         : SRV03 : MSSQL / ADCS
 
 The lab setup is automated using vagrant and ansible automation tools.
 You can change the vm version in the Vagrantfile according to Stefan Scherer vagrant repository : https://app.vagrantup.com/StefanScherer
@@ -35,94 +35,94 @@ You can change the vm version in the Vagrantfile according to Stefan Scherer vag
 - Graph of some scenarios is available here :
 ![diagram-GOAD_compromission_Path_dark](./../../docs/img/diagram-GOAD_compromission_Path_dark.png)
 
-NORTH.SEVENKINGDOMS.LOCAL
-- STARKS:              RDP on WINTERFELL AND CASTELBLACK
-  - arya.stark:        Execute as user on mssql, pass on all share
-  - eddard.stark:      DOMAIN ADMIN NORTH/ (bot 5min) LLMRN request to do NTLM relay with responder
-  - catelyn.stark:     
-  - robb.stark:        bot (3min) RESPONDER LLMR / lsass present user
-  - sansa.stark:       keywalking password / unconstrained delegation
-  - brandon.stark:     ASREP_ROASTING
-  - rickon.stark:      pass spray WinterYYYY
-  - jon.snow:          mssql admin / KERBEROASTING / mssql trusted link
-  - hodor:             PASSWORD SPRAY (user=password)
-- NIGHT WATCH:         RDP on CASTELBLACK
-  - samwell.tarly:     Password in ldap description / mssql execute as login
-                       GPO abuse (Edit Settings on "STARKWALLPAPER" GPO)
-  - jon.snow:          (see starks)
-  - jeor.mormont:      (see mormont)
-- MORMONT:             RDP on CASTELBLACK
-  - jeor.mormont:      Admin castelblack, pass in sysvol script
-- AcrossTheSea :       cross forest group
+NAMEK.EARTHREALM.LOCAL
+- NAMEKIANS:              RDP on NAMEKPLANET AND LOOKOUT
+  - gohan:        Execute as user on mssql, pass on all share
+  - piccolo:      DOMAIN ADMIN NAMEK/ (bot 5min) LLMRN request to do NTLM relay with responder
+  - nail:     
+  - dende:        bot (3min) RESPONDER LLMR / lsass present user
+  - videl:       keywalking password / unconstrained delegation
+  - chiaotzu:     ASREP_ROASTING
+  - tien:      pass spray WinterYYYY
+  - uub:          mssql admin / KERBEROASTING / mssql trusted link
+  - popo:             PASSWORD SPRAY (user=password)
+- LOOKOUTS:         RDP on LOOKOUT
+  - yajirobe:     Password in ldap description / mssql execute as login
+                       GPO abuse (Edit Settings on "NAMEKWALLPAPER" GPO)
+  - uub:          (see namekians)
+  - kingkai:      (see kingkaistudents)
+- KINGKAI:             RDP on LOOKOUT
+  - kingkai:      Admin lookout, pass in sysvol script
+- RealmTravel :       cross forest group
 
-SEVENKINGDOMS.LOCAL
-- LANISTERS
-  - tywin.lannister:   ACE forcechangepassword on jaime.lanister, password on sysvol cyphered
-  - jaime.lannister:   ACE genericwrite-on-user joffrey.baratheon
-  - tyron.lannister:   ACE self membership on small council
-  - cersei.lannister:  DOMAIN ADMIN SEVENKINGDOMS
-- BARATHEON:           RDP on KINGSLANDING
-  - robert.baratheon:  DOMAIN ADMIN SEVENKINGDOMS, protected user
-  - joffrey.baratheon: ACE Write DACL on tyron.lannister
-  - renly.baratheon:   WriteDACL on container, sensitive user
-  - stannis.baratheon: ACE genericall-on-computer kingslanding 
-- SMALL COUNCIL :      ACE add Member to group dragon stone / RDP on KINGSLANDING
-  - petyer.baelish:    
-  - lord.varys:        ACE genericall-on-group Domain Admins and sdholder
-  - maester.pycelle:   
-- DRAGONSTONE :        ACE Write Owner on group KINGSGUARD
-- KINGSGUARD :         ACE generic all on user stannis.baratheon
-- AccorsTheNarrowSea:       cross forest group
+EARTHREALM.LOCAL
+- ZFIGHTERS
+  - vegeta:   ACE forcechangepassword on yamcha, password on sysvol cyphered
+  - yamcha:   ACE genericwrite-on-user trunks
+  - krillin:   ACE self membership on earthdefenders
+  - bulma:  DOMAIN ADMIN EARTHREALM
+- SAIYANS:           RDP on CAPSULECORP
+  - goku:  DOMAIN ADMIN EARTHREALM, protected user
+  - trunks: ACE Write DACL on krillin
+  - goten:   WriteDACL on container, sensitive user
+  - gotenks: ACE genericall-on-computer capsulecorp 
+- EARTHDEFENDERS :      ACE add Member to group elitewarriors / RDP on CAPSULECORP
+  - roshi:    
+  - jaco:        ACE genericall-on-group Domain Admins and sdholder
+  - korin:   
+- ELITEWARRIORS :        ACE Write Owner on group DEITYGUARDS
+- DEITYGUARDS :         ACE generic all on user gotenks
+- UniverseTravel:       cross forest group
 
-ESSOS.LOCAL
-- TARGERYEN
-  - missande :          ASREP roasting, generic all on khal
-  - daenerys.targaryen: DOMAIN ADMIN ESSOS
-  - viserys.targaryen:  ACE write property on jorah.mormont
-  - jorah.mormont:      mssql execute as login / mssql trusted link / Read LAPS Password
-- DOTHRAKI
-  - khal.drogo:         mssql admin / GenericAll on viserys (shadow credentials) / GenericAll on ECS4
-- DragonsFriends:       cross forest group
-- Spys:                 cross forest group / Read LAPS password  / ACL generic all jorah.mormont
+UNIVERSE7.LOCAL
+- GODOFDESTRUCTION
+  - mai :          ASREP roasting, generic all on frieza
+  - beerus: DOMAIN ADMIN UNIVERSE7
+  - whis:  ACE write property on zarbon
+  - zarbon:      mssql execute as login / mssql trusted link / Read LAPS Password
+- FRIEZAFORCE
+  - frieza:         mssql admin / GenericAll on whis (shadow credentials) / GenericAll on ECS4
+- Z-ALLIES:       cross forest group
+- Observers:                 cross forest group / Read LAPS password  / ACL generic all zarbon
 
 ## Computers Users and group permissions
 
-- SEVENKINGDOMS
-  - DC01 : kingslanding.sevenkingdoms.local (Windows Server 2019) (SEVENKINGDOMS DC)
-    - Admins : robert.baratheon (U), cersei.lannister (U)
-    - RDP: Small Council (G)
+- EARTHREALM
+  - DC01 : capsulecorp.earthrealm.local (Windows Server 2019) (EARTHREALM DC)
+    - Admins : goku (U), bulma (U)
+    - RDP: EarthDefenders (G)
 
-- NORTH
-  - DC02 : winterfell.north.sevenkingdoms.local (Windows Server 2019) (NORTH DC)
-    - Admins : eddard.stark (U), catelyn.stark (U), robb.stark (U)
-    - RDP: Stark(G)
+- NAMEK
+  - DC02 : namekplanet.namek.earthrealm.local (Windows Server 2019) (NAMEK DC)
+    - Admins : piccolo (U), nail (U), dende (U)
+    - RDP: Namekians(G)
 
-  - SRV02 : castelblack.essos.local (Windows Server 2019) (IIS, MSSQL, SMB share)
-    - Admins: jeor.mormont (U)
-    - RDP: Night Watch (G), Mormont (G), Stark (G)
+  - SRV02 : lookout.universe7.local (Windows Server 2019) (IIS, MSSQL, SMB share)
+    - Admins: kingkai (U)
+    - RDP: Lookouts (G), KingKai (G), Namekians (G)
     - IIS : allow asp upload, run as NT Authority/network
     - MSSQL:
-      - admin : jon.snow
+      - admin : uub
       - impersonate : 
-        - execute as login : samwel.tarlly -> sa
-        - execute as user : arya.stark -> dbo
+        - execute as login : yajirobe -> sa
+        - execute as user : gohan -> dbo
       - link :
-        - to braavos : jon.snow -> sa
+        - to kameisland : uub -> sa
 
-- ESSOS
-  - DC03  : meereen.essos.local (Windows Server 2016) (ESSOS DC)
-    - Admins: daenerys.targaryen (U)
-    - RDP: Targaryen (G)
+- UNIVERSE7
+  - DC03  : beerusplanet.universe7.local (Windows Server 2016) (UNIVERSE7 DC)
+    - Admins: beerus (U)
+    - RDP: GodOfDestruction (G)
 
-  - SRV03 : braavos.essos.local (Windows Server 2016) (MSSQL, SMB share)
-    - Admins: khal.drogo (U)
-    - RDP: Dothraki (G)
+  - SRV03 : kameisland.universe7.local (Windows Server 2016) (MSSQL, SMB share)
+    - Admins: frieza (U)
+    - RDP: FriezaForce (G)
     - MSSQL :
-      - admin : khal.drogo
+      - admin : frieza
       - impersonate :
-        - execute as login : jorah.mormont -> sa
+        - execute as login : zarbon -> sa
       - link:
-        - to castelblack: jorah.mormont -> sa
+        - to lookout: zarbon -> sa
 
 ## Blueteam / ELK
 
@@ -170,6 +170,6 @@ If you want to do that by hand:
 - If you previously install the v1 do not try to update as a lot of things have changed. Just drop your old lab and build the new one (you will not regret it)
 - Chocolatey is no more used and basic tools like git or notepad++ are no more installed by default (as chocolatey regularly crash the install due to hitting rate on multiples builds)
 - ELK is no more installed by default to save resources but you still can install it separately (see the blueteam/elk part)
-- Dragonstone vm as disappear and there is no more DC replication in the lab to save resources
-- Wintefell is now a domain controller for the subdomain north of the sevenkingdoms.local domain
+- GizardWastelands vm as disappear and there is no more DC replication in the lab to save resources
+- Namekplanet is now a domain controller for the subdomain namek of the earthrealm.local domain
 
