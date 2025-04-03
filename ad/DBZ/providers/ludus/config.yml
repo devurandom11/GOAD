@@ -46,7 +46,7 @@ ludus:
       sysprep: true
   - vm_name: "{{ range_id }}-DBZ-SRV04"
     hostname: "{{ range_id }}-SRV04"
-    template: ubuntu-22.04-server-x64-template
+    template: ubuntu-22.04-x64-server-template
     vlan: 10
     ip_last_octet: 24
     ram_gb: 4
