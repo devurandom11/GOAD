@@ -6,10 +6,19 @@
   tags: 'data'
 
 # set AD datas ==================================================================================================
-- name: "play servers AD configuration"
-  hosts: server
+- name: "play Windows servers AD configuration"
+  hosts: server:!linux_domain
   roles:
     - { role: 'member_server', tags: 'server'}
+  vars:
+    member_domain: "{{lab.hosts[dict_key].domain}}"
+    domain_username: "{{admin_user}}@{{member_domain}}"
+    domain_password: "{{lab.domains[member_domain].domain_password}}"
+
+- name: "play Linux servers AD configuration"
+  hosts: server:&linux_domain 
+  roles:
+    - { role: 'linux_member_server', tags: 'server'}
   vars:
     member_domain: "{{lab.hosts[dict_key].domain}}"
     domain_username: "{{admin_user}}@{{member_domain}}"

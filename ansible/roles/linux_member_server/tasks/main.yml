@@ -1,0 +1,24 @@
+---
+# Linux member server tasks
+
+- name: Set DNS server to domain controller
+  become: yes
+  lineinfile:
+    path: /etc/resolv.conf
+    regexp: '^nameserver'
+    line: "nameserver {{hostvars[dns_domain].ansible_host}}"
+    insertbefore: BOF
+  when: dns_domain is defined
+
+- name: Create necessary directories for domain join
+  become: yes
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  with_items:
+    - /etc/samba
+    - /var/lib/samba
+
+# Note: The domain join functionality was moved to linux-domain-join.yml
+# This role only handles the DNS and other server-specific configurations 
