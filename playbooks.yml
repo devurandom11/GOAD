@@ -65,6 +65,7 @@ default:
   # Waiting 5 minutes for the child domain to be ready
   - wait5m.yml
   - ad-members.yml
+  - linux-domain-join.yml
   - ad-trusts.yml
   - ad-data.yml
   - ad-gmsa.yml
@@ -73,5 +74,6 @@ default:
   - adcs.yml
   - ad-acl.yml
   - servers.yml
+  - linux-servers.yml
   - security.yml
   - vulnerabilities.yml

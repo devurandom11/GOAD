@@ -1,0 +1,16 @@
+---
+# Load datas
+- import_playbook: data.yml
+  vars:
+    data_path: "../ad/{{domain_name}}/data/"
+  tags: 'data'
+
+# Configure Linux servers
+- name: Configure Linux server services
+  hosts: linux_domain
+  become: yes
+  tags: 'linux_servers'
+  roles:
+    - role: 'linux/services'
+  vars:
+    services: "{{lab.hosts[dict_key].services | default({})}}" 

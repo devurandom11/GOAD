@@ -5,8 +5,8 @@
     data_path: "../ad/{{domain_name}}/data/"
   tags: 'data'
 
-- name: "Setup vulnerabilities with tasks"
-  hosts: domain
+- name: "Setup vulnerabilities with tasks for Windows systems"
+  hosts: domain:!linux_domain
   tasks:
     - include_role:
         name: "vulns/{{vuln}}"
@@ -25,3 +25,25 @@
         script_path: "../ad/{{domain_name}}/scripts"
         ps_script: "{{script_path}}/{{item}}"
       loop: "{{lab.hosts[dict_key].scripts | default([]) }}"
+
+- name: "Setup vulnerabilities with tasks for Linux systems"
+  hosts: linux_domain
+  become: yes
+  tasks:
+    - name: "Configure weak permissions for shared folder"
+      file:
+        path: "{{ item.value.path }}"
+        state: directory
+        mode: "{{ item.value.permissions }}"
+        recurse: yes
+      when: "'weak_permissions' in lab.hosts[dict_key].vulns"
+      loop: "{{ lookup('dict', lab.hosts[dict_key].vulns_vars.weak_permissions | default({})) }}"
+      loop_control:
+        label: "{{ item.key }}"
+
+    - name: "Disable firewall for Linux"
+      service:
+        name: ufw
+        state: stopped
+        enabled: no
+      when: "'disable_firewall' in lab.hosts[dict_key].vulns"

@@ -1,0 +1,26 @@
+---
+# Load datas
+- import_playbook: data.yml
+  vars:
+    data_path: "../ad/{{domain_name}}/data/"
+  tags: 'data'
+
+# Join Linux servers to domain
+- name: Join Linux servers to domain
+  hosts: linux_domain
+  become: yes
+  tags: 'linux_domain_join'
+  roles:
+    - role: 'linux/add_linux_to_domain'
+  vars:
+    domain: "{{lab.hosts[dict_key].domain}}"
+    domain_username: "{{domain}}\\{{admin_user}}"
+    domain_password: "{{lab.domains[domain].domain_password}}"
+    hostname: "{{lab.hosts[dict_key].hostname}}"
+    dc_fqdn: "{{lab.domains[domain].dc}}.{{domain}}"
+    dc_ip: "{{hostvars[lab.domains[domain].dc].ansible_host}}"
+    domain_join_method: "{{lab.hosts[dict_key].domain_join_method | default('sssd')}}"
+    # Add groups that should have sudo access
+    sudoers_group: "{{lab.hosts[dict_key].local_groups.sudo | default([])}}"
+    # Add groups that should have SSH access
+    ssh_group: "{{lab.hosts[dict_key].local_groups.sudo | default([])}}" 

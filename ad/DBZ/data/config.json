@@ -286,6 +286,46 @@
                         }
                     }
                 }
+            },
+            "srv04": {
+                "hostname": "pentos",
+                "type": "linux",
+                "os": "ubuntu",
+                "local_admin_password": "UbuntuR0ck$!",
+                "domain": "essos.local",
+                "path": "DC=essos,DC=local",
+                "use_laps": false,
+                "domain_join_method": "sssd",
+                "local_groups": {
+                    "sudo": [
+                        "essos\\illyrio.mopatis"
+                    ]
+                },
+                "scripts": [],
+                "vulns": [
+                    "disable_firewall",
+                    "weak_permissions"
+                ],
+                "vulns_vars": {
+                    "weak_permissions": {
+                        "shared_folder": {
+                            "path": "/mnt/shared",
+                            "permissions": "777"
+                        }
+                    }
+                },
+                "services": {
+                    "web": {
+                        "type": "apache",
+                        "port": 80,
+                        "document_root": "/var/www/html"
+                    },
+                    "database": {
+                        "type": "mysql",
+                        "port": 3306,
+                        "root_password": "Myst1c@lM4gist3rs"
+                    }
+                }
             }
         },
         "domains": {
@@ -495,6 +535,18 @@
                             "MSSQLSvc/braavos.essos.local:1433",
                             "MSSQLSvc/braavos.essos.local"
                         ]
+                    },
+                    "illyrio.mopatis": {
+                        "firstname": "Illyrio",
+                        "surname": "Mopatis",
+                        "password": "FreeC1t1es!",
+                        "city": "Pentos",
+                        "description": "Illyrio Mopatis - Magister of Pentos",
+                        "groups": [
+                            "Dothraki",
+                            "DragonsFriends"
+                        ],
+                        "path": "CN=Users,DC=essos,DC=local"
                     }
                 }
             },

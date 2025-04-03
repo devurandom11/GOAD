@@ -7,8 +7,8 @@
 
 # set AD datas ==================================================================================================
 
-- name: Prepare servers set admin password, set hostname
-  hosts: domain
+- name: Prepare Windows servers set admin password, set hostname
+  hosts: domain:!linux_domain
   tags: 'prepare_servers'
   roles:
   - { role: 'settings/admin_password', tags: 'admin_password' }
@@ -16,3 +16,17 @@
   vars:
     local_admin_password: "{{lab.hosts[dict_key].local_admin_password}}"
     hostname: "{{lab.hosts[dict_key].hostname}}"
+
+- name: Prepare Linux servers
+  hosts: linux_domain
+  become: yes
+  tags: 'prepare_linux_servers'
+  tasks:
+    - name: Set hostname
+      hostname:
+        name: "{{lab.hosts[dict_key].hostname}}"
+      
+    - name: Set root password
+      user:
+        name: root
+        password: "{{ lab.hosts[dict_key].local_admin_password | password_hash('sha512') }}"
